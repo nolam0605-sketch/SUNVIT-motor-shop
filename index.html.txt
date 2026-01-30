@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Motorcycle Parts Shop</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{margin:0;font-family:Arial;background:#f2f4f7}
+header{background:#0f172a;color:white;padding:15px;text-align:center;font-size:22px;font-weight:bold}
+.container{max-width:1200px;margin:auto;padding:15px}
+.top-controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}
+.top-controls input,.top-controls select{padding:10px;border-radius:8px;border:1px solid #ccc;flex:1}
+.card{background:white;border-radius:12px;padding:15px;margin-bottom:12px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.item{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.item-name{font-size:18px;font-weight:bold}
+.category{font-size:13px;color:#666}
+.price{font-size:18px;font-weight:bold;color:#16a34a}
+.btns button{margin-left:5px;padding:6px 10px;border:none;border-radius:6px;cursor:pointer}
+.edit{background:#2563eb;color:white}
+.del{background:#dc2626;color:white}
+.order{background:#0f172a;color:white}
+.add-form{background:white;border-radius:12px;padding:15px;margin-bottom:15px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.add-form input,.add-form button{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #ccc}
+.add-form button{background:#0f172a;color:white;font-weight:bold}
+img{width:70px;height:70px;object-fit:cover;border-radius:8px;margin-right:10px}
+@media(max-width:600px){.item{flex-direction:column;align-items:flex-start}.price{margin-top:5px}}
+</style>
+</head>
+<body>
+<header>🏍 ZED MOTOR PARTS SHOP</header>
+<div class="container">
+
+<div class="top-controls">
+<input type="text" id="search" placeholder="Search item..." oninput="renderItems()">
+<select id="filter" onchange="renderItems()">
+<option value="all">All Categories</option>
+</select>
+</div>
+
+<div class="add-form">
+<h3>➕ Add Product</h3>
+<input id="name" placeholder="Item name">
+<input id="category" placeholder="Category">
+<input id="price" type="number" placeholder="Price">
+<input id="image" placeholder="Image URL (optional)">
+<button onclick="addItem()">Add Item</button>
+</div>
+
+<div id="items"></div>
+</div>
+
+<script>
+let items = JSON.parse(localStorage.getItem('items')) || [];
+
+function save(){localStorage.setItem('items',JSON.stringify(items));}
+
+function addItem(){
+ const name=name.value,category=category.value,price=price.value,image=image.value;
+ if(!name||!category||!price) return alert('Complete fields');
+ items.push({name,category,price,image});
+ save();
+ name.value=category.value=price.value=image.value='';
+ renderItems();
+}
+
+function deleteItem(i){if(confirm('Delete item?')){items.splice(i,1);save();renderItems();}}
+
+function editItem(i){
+ const it=items[i];
+ const n=prompt('Name',it.name);
+ const c=prompt('Category',it.category);
+ const p=prompt('Price',it.price);
+ if(n&&c&&p){items[i]={...it,name:n,category:c,price:p};save();renderItems();}
+}
+
+function orderItem(i){
+ const it=items[i];
+ const msg = `Order Request:%0AItem: ${it.name}%0APrice: ₱${it.price}`;
+ window.open(`https://wa.me/?text=${msg}`,'_blank');
+}
+
+function renderItems(){
+ const list=document.getElementById('items');
+ const s=document.getElementById('search').value.toLowerCase();
+ const f=document.getElementById('filter').value;
+ list.innerHTML='';
+
+ let cats=new Set();
+ items.forEach(it=>cats.add(it.category));
+ const filter=document.getElementById('filter');
+ filter.innerHTML='<option value="all">All Categories</option>';
+ cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;filter.appendChild(o);});
+
+ items.filter(it=>{
+  return (f==='all'||it.category===f) && it.name.toLowerCase().includes(s);
+ }).forEach((it,i)=>{
+  const d=document.createElement('div');d.className='card';
+  d.innerHTML=`
+  <div class="item">
+   <div style="display:flex;align-items:center">
+    ${it.image?`<img src="${it.image}">`:''}
+    <div>
+     <div class="item-name">${it.name}</div>
+     <div class="category">${it.category}</div>
+    </div>
+   </div>
+   <div>
+    <div class="price">₱${it.price}</div>
+    <div class="btns">
+     <button class="order" onclick="orderItem(${i})">Order</button>
+     <button class="edit" onclick="editItem(${i})">Edit</button>
+     <button class="del" onclick="deleteItem(${i})">Delete</button>
+    </div>
+   </div>
+  </div>`;
+  list.appendChild(d);
+ });
+}
+
+renderItems();
+</script>
+</body>
+</html>
